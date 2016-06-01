@@ -21,7 +21,7 @@
     if (self = [super init]) {
         self.referenceView = referenceView;
         [self defaultConfiguration];
-       // [self setupPathLayerWithText:self.textToAnimate font:self.font fontSize:self.fontSize];
+        [self setupPathLayerWithText:self.textToAnimate font:self.font fontSize:self.fontSize];
     }
     
     return self;
@@ -29,19 +29,32 @@
 
 
 - (void)defaultConfiguration{
-    self.animationLayer = [CALayer new];
+    self.animationLayer = [CALayer layer];
+    //self.animationLayer.backgroundColor = [UIColor redColor].CGColor;
     self.animationLayer.frame = self.referenceView.bounds;
     [self.referenceView.layer addSublayer:self.animationLayer];
-    self.font = [UIFont fontWithName:@"Avenir" size:30];
+    self.font = [UIFont systemFontOfSize:30];
     self.textColor = [UIColor redColor];
+    self.textToAnimate = @"hello";
+    self.fontSize = 30;
     
 }
 
+- (void)clearLayer{
+    if (self.pathLayer != nil) {
+        [self.pathLayer removeFromSuperlayer];
+        self.pathLayer = nil;
+    }
+}
+
 - (void)setupPathLayerWithText:(NSString *)text font:(UIFont *)font fontSize:(CGFloat)fontSize{
+    
+    [self clearLayer];
+    
     CGMutablePathRef letters = CGPathCreateMutable();
     CTFontRef fontRef = CTFontCreateWithName( (__bridge CFStringRef)font.fontName, fontSize, nil);
-    NSMutableAttributedString *attrString = [[NSAttributedString alloc] initWithString:text attributes:@{@"kCTFontAttributeName":font}];
-    
+
+    NSAttributedString *attrString = [[NSAttributedString alloc] initWithString:text attributes:@{(__bridge NSString *)kCTFontAttributeName:(__bridge id)fontRef}];
     CTLineRef lineRef = CTLineCreateWithAttributedString((__bridge CFAttributedStringRef)attrString);
     CFArrayRef runArray = CTLineGetGlyphRuns(lineRef);
     
@@ -49,7 +62,7 @@
         CTRunRef run = CFArrayGetValueAtIndex(runArray, i);
         CFDictionaryRef dictRef = CTRunGetAttributes(run);
         NSDictionary *dict = (__bridge NSDictionary *)dictRef;
-        CTFontRef fontName = (__bridge CTFontRef)dict[@"kCTFontAttributeName"];
+        CTFontRef fontName = (__bridge CTFontRef)dict[(__bridge NSString *)kCTFontAttributeName];
         
         for (int runGlyphIndex = 0; runGlyphIndex < CTRunGetGlyphCount(run); runGlyphIndex++) {
             CFRange thisGlyphRange = CFRangeMake(runGlyphIndex, 1);
@@ -60,11 +73,10 @@
             CGPathRef path = CTFontCreatePathForGlyph(fontName, glyph, nil);
             CGAffineTransform t = CGAffineTransformMakeTranslation(postion.x, postion.y);
             CGPathAddPath(letters, &t, path);
-            
         }
     }
     
-    UIBezierPath *path = [UIBezierPath new];
+    UIBezierPath *path = [UIBezierPath bezierPath];
     [path moveToPoint:CGPointZero];
     [path appendPath:[UIBezierPath bezierPathWithCGPath:letters]];
     
@@ -81,10 +93,15 @@
     [self.animationLayer addSublayer:pathLayer];
     self.pathLayer = pathLayer;
 
+
 }
 
 - (void)startAnimation{
     NSTimeInterval duration = 4.0;
+    
+    if (self.pathLayer != nil) {
+        [self.pathLayer removeAllAnimations];
+    }
     
     [self setupPathLayerWithText:self.textToAnimate font:self.font fontSize:self.fontSize];
     
@@ -99,9 +116,8 @@
     
     NSTimeInterval coloringDuration = 4.0;
     CAKeyframeAnimation *colorFillAnimation = [CAKeyframeAnimation animationWithKeyPath:@"fillColor"];
-    colorFillAnimation.duration = coloringDuration;
     colorFillAnimation.duration     = duration + coloringDuration;
-    colorFillAnimation.values       = @[[UIColor clearColor], [UIColor clearColor], self.textColor];
+    colorFillAnimation.values       = @[(__bridge id)[UIColor clearColor].CGColor, (__bridge id)[UIColor clearColor].CGColor, (__bridge id)self.textColor.CGColor];
     colorFillAnimation.keyTimes     = @[@0, @(duration/(duration + coloringDuration)), @1];
     
     [self.pathLayer addAnimation:colorFillAnimation forKey:@"fillColor"];

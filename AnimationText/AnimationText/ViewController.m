@@ -10,7 +10,7 @@
 #import "LHAnimationText.h"
 
 @interface ViewController ()
-
+@property (nonatomic, strong)LHAnimationText *aText;
 @end
 
 @implementation ViewController
@@ -28,6 +28,8 @@
     aText.textToAnimate = @"hello world!";
     
     [aText startAnimation];
+    
+    self.aText = aText;
 }
 
 - (void)didReceiveMemoryWarning {
