@@ -21,7 +21,7 @@
     
     self.view.backgroundColor = [UIColor whiteColor];
     
-    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 100, 320, 100)];
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 100, self.view.bounds.size.width, 100)];
     [self.view addSubview:view];
     
     LHAnimationText *aText = [[LHAnimationText alloc] initWithReferenceView:view];
